@@ -10,8 +10,8 @@ rrapply(
   f,
   classes = "ANY",
   deflt = NULL,
-  how = c("replace", "list", "unlist", "prune", "flatten"),
-  feverywhere = FALSE,
+  how = c("replace", "list", "unlist", "prune", "flatten", "melt"),
+  feverywhere = NULL,
   dfaslist = TRUE,
   ...
 )
@@ -32,7 +32,8 @@ rrapply(
 
 \item{how}{character string partially matching the five possibilities given: see \sQuote{Details}.}
 
-\item{feverywhere}{logical value to apply \code{f} to all (\dQuote{list-like} or non \dQuote{list-like}) elements of \code{object}.}
+\item{feverywhere}{character options \code{"break"} or \code{"recurse"} to override default behavior of \code{f}: see \sQuote{Details}.
+By default \code{NULL}, which applies \code{f} only to non \dQuote{list-like} elements.}
 
 \item{dfaslist}{logical value to treat data.frames as \dQuote{list-like} object.}
 
@@ -42,7 +43,8 @@ rrapply(
 If \code{how = "unlist"}, a vector as in \code{\link{rapply}}. If \code{how = "list"} or \code{how = "replace"}, \dQuote{list-like} of similar 
 structure as \code{object} as in \code{\link{rapply}}. If \code{how = "prune"}, a pruned \dQuote{list-like} object of similar structure as \code{object}
 with pruned list elements based on \code{classes} and \code{condition}. If \code{how = "flatten"}, an unnested pruned list with pruned list elements 
-based on \code{classes} and \code{condition}.
+based on \code{classes} and \code{condition}. If \code{how = "melt"}, a melted data.frame containing the node paths and values of the pruned list 
+elements based on \code{classes} and \code{condition}.
 }
 \description{
 \code{rrapply} is a reimplemented and extended version of \code{\link{rapply}} to recursively apply a function \code{f} to 
@@ -55,10 +57,13 @@ elements.
 \section{List pruning}{
 
 In addition to \code{\link{rapply}}'s modes to set \code{how} equal to \code{"replace"}, \code{"list"} or \code{"unlist"}, 
-two choices \code{"prune"} and \code{"flatten"} are available. \code{how = "prune"} filters all list elements not subject to 
+three choices \code{"prune"}, \code{"flatten"} and \code{"melt"} are available. \code{how = "prune"} filters all list elements not subject to 
 application of \code{f} from the list \code{object}. The original list structure is retained, similar to the non-pruned options 
 \code{how = "replace"} or \code{how = "list"}. \code{how = "flatten"} is an efficient way to return a flattened unnested version 
-of the pruned list.
+of the pruned list. \code{how = "melt"} returns a melted data.frame of the pruned list, each row contains the path of a single terminal node in 
+the pruned list at depth layers \code{L1}, \code{L2}, and so on. The list-column \code{"value"} contains the values at the terminal nodes and is 
+equivalent to the flattened list returned by \code{how = "flatten"}. If no list names are present, the node names in the data.frame default to
+the indices of the list elements \code{"..1"}, \code{"..2"}, etc.
 }
 
 \section{Condition function}{
@@ -93,18 +98,25 @@ to the list element \code{x[[c(1, 2)]]}. The names \code{.xname} and \code{.xpos
 
 \section{List node aggregation}{
 
-By default, \code{rrapply} applies the \code{f} function only to leaf elements by recursing into any list-like element that is encountered. 
-If \code{feverywhere = TRUE}, this behavior is overridden and the \code{f} function will be applied to any element of \code{object} (e.g. a sublist) 
-that satisfies the \code{condition} function. If the \code{condition} function is not satisfied for a list-like 
-element, \code{rrapply} will recurse further into the sublist, apply the \code{f} function to the nodes that 
-satisfy the \code{condition}, and so on. The primary use of \code{feverywhere = TRUE} is to aggregate list nodes or summarize sublists of \code{object}. 
-Additional examples can be found in the package vignette.
+By default, \code{rrapply} recurses into any \dQuote{list-like} element. If \code{feverywhere = "break"}, this behavior is overridden and the 
+\code{f} function is applied to any element of \code{object} (e.g. a sublist) that satisfies \code{condition} and \code{classes}. 
+If the \code{condition} or \code{classes} arguments are not satisfied for a \dQuote{list-like} element, \code{rrapply} will recurse further into the sublist, 
+apply the \code{f} function to the nodes that satisfy \code{condition} and \code{classes}, and so on. The primary use of \code{feverywhere = "break"} is 
+to aggregate list nodes or summarize sublists of \code{object}. Additional examples can be found in the package vignette.
+}
+
+\section{List node updating}{
+
+If \code{feverywhere = "recurse"}, \code{rrapply} applies the \code{f} function to any element of \code{object} (e.g. a sublist) that satisfies 
+\code{condition} and \code{classes} similar to \code{feverywhere = "break"}, but recurses further into the \emph{updated} list-like element 
+after application of the \code{f} function. The primary use of \code{feverywhere = "recurse"} is to recursively update for instance the names of 
+all nodes in a nested list. Additional examples are found in the package vignette.
 }
 
 \section{Data.frames as lists}{
 
-If \code{feverywhere = FALSE}, \code{rrapply} recurses into all list-like objects equivalent to \code{\link{rapply}}. 
-Since data.frames are list-like objects, the \code{f} function will descend into the individual columns of a data.frame. 
+If \code{feverywhere = NULL} (default), \code{rrapply} recurses into all \dQuote{list-like} objects equivalent to \code{\link{rapply}}. 
+Since data.frames are \dQuote{list-like} objects, the \code{f} function will descend into the individual columns of a data.frame. 
 If \code{dfaslist = FALSE}, data.frames are no longer viewed as lists and the \code{f} and \code{condition} functions are 
 applied directly to the data.frame itself and not its columns.
 }
@@ -144,6 +156,15 @@ na_drop_oceania2 <- rrapply(
   how = "flatten"
 )
 str(na_drop_oceania2, list.len = 10, give.attr = FALSE)
+
+## Drop all logical NA's and return melted data.frame
+na_drop_oceania3 <- rrapply(
+  renewable_oceania,
+  f = identity,
+  classes = "numeric",
+  how = "melt"
+)
+head(na_drop_oceania3)
 
 # Condition function
 
@@ -220,7 +241,7 @@ rrapply(
   condition = function(x, .xname) .xname == "Europe",
   f = function(x) mean(unlist(x), na.rm = TRUE),
   how = "flatten",
-  feverywhere = TRUE
+  feverywhere = "break"
 )
 
 ## Calculate mean value for each continent
@@ -228,11 +249,26 @@ renewable_continent_summary <- rrapply(
   renewable_energy_by_country,  
   condition = function(x, .xpos) length(.xpos) == 2,
   f = function(x) mean(unlist(x), na.rm = TRUE),
-  feverywhere = TRUE
+  feverywhere = "break"
 )
 
 ## Antarctica's value is missing
 str(renewable_continent_summary, give.attr = FALSE)
+
+# List node updating
+
+## replace country names by M-49 codes
+renewable_M49 <- rrapply(
+  list(renewable_energy_by_country), 
+  condition = is.list,
+  f = function(x) {
+    names(x) <- vapply(x, attr, character(1L), which = "M49-code")
+    return(x)
+  },
+  feverywhere = "recurse"
+)
+
+str(renewable_M49[[1]], max.level = 3, list.len = 3, give.attr = FALSE)
 
 # List attributes
 
@@ -255,18 +291,22 @@ str(na_drop_oceania_attr2, max.level = 2)
 # Applying functions to data.frames
 
 ## Scale only Sepal columns in iris dataset
-rrapply(
-  iris,
-  condition = function(x, .xname) grepl("Sepal", .xname),
-  f = scale
+head(
+  rrapply(
+    iris,
+    condition = function(x, .xname) grepl("Sepal", .xname),
+    f = scale
+  )
 )
 
 ## Scale and keep only numeric columns
-rrapply(
-  iris,
-  f = scale,
-  classes = "numeric",
-  how = "prune"
+head(
+  rrapply(
+    iris,
+    f = scale,
+    classes = "numeric",
+    how = "prune"
+  )
 )
 
 ## Summarize only numeric columns with how = "flatten"
