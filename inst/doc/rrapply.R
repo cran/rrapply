@@ -124,9 +124,9 @@ head(na_drop_melt)
 ## Remove all names at L2 (these arguments are explained in the following sections)
 oceania_unnamed <- rrapply(
   renewable_oceania,
-  condition = function(x, .xpos) length(.xpos) < 2,
-  f = unname,
-  feverywhere = "break"
+  classes = "list",
+  condition = function(x, .xname) .xname == "Oceania",
+  f = unname
 )
 
 na_drop_melt2 <- rrapply(
@@ -341,43 +341,43 @@ str(siblings_sweden, give.attr = FALSE)
 
 
 ###################################################
-### code chunk number 28: rrapply.Rnw:421-431
+### code chunk number 28: rrapply.Rnw:420-430
 ###################################################
 rrapply(
   renewable_energy_by_country,  
+  classes = "list",
   condition = function(x, .xname) .xname == "Europe",
   f = function(x) list(
     mean = mean(unlist(x), na.rm = TRUE), 
     sd = sd(unlist(x), na.rm = TRUE)
   ),
-  how = "flatten",
-  feverywhere = "break"
+  how = "flatten"
 )
 
 
 ###################################################
-### code chunk number 29: rrapply.Rnw:437-447
+### code chunk number 29: rrapply.Rnw:436-446
 ###################################################
 rrapply(
   renewable_energy_by_country,
+  classes = "list",
   condition = function(x) attr(x, "M49-code") == "150",
   f = function(x) list(
     mean = mean(unlist(x), na.rm = TRUE), 
     sd = sd(unlist(x), na.rm = TRUE)
   ),
-  how = "flatten",
-  feverywhere = "break"
+  how = "flatten"
 )
 
 
 ###################################################
-### code chunk number 30: rrapply.Rnw:450-459
+### code chunk number 30: rrapply.Rnw:449-458
 ###################################################
 renewable_continent_summary <- rrapply(
   renewable_energy_by_country,  
+  classes = "list",
   condition = function(x, .xpos) length(.xpos) == 2,
-  f = function(x) mean(unlist(x), na.rm = TRUE),
-  feverywhere = "break"
+  f = function(x) mean(unlist(x), na.rm = TRUE)
 )
 
 ## Antarctica has a missing value
@@ -385,23 +385,35 @@ str(renewable_continent_summary, give.attr = FALSE)
 
 
 ###################################################
-### code chunk number 31: rrapply.Rnw:466-477
+### code chunk number 31: rrapply.Rnw:462-469
+###################################################
+## Filter country or region by M49-code
+rrapply(
+  renewable_energy_by_country,
+  classes = c("list", "ANY"), 
+  condition = function(x) attr(x, "M49-code") == "155",
+  f = function(x, .xname) .xname,
+  how = "unlist")
+
+
+###################################################
+### code chunk number 32: rrapply.Rnw:476-487
 ###################################################
 renewable_M49 <- rrapply(
   list(renewable_energy_by_country), 
-  condition = is.list,
+  classes = "list",
   f = function(x) {
     names(x) <- vapply(x, attr, character(1L), which = "M49-code")
     return(x)
   },
-  feverywhere = "recurse"
+  how = "recurse"
 )
 
 str(renewable_M49[[1]], max.level = 3, list.len = 3, give.attr = FALSE)
 
 
 ###################################################
-### code chunk number 32: rrapply.Rnw:489-495
+### code chunk number 33: rrapply.Rnw:499-505
 ###################################################
 ## melted data.frame
 head(na_drop_melt)
@@ -412,14 +424,14 @@ str(na_drop_unmelt, list.len = 3, give.attr = FALSE)
 
 
 ###################################################
-### code chunk number 33: rrapply.Rnw:505-507
+### code chunk number 34: rrapply.Rnw:515-517
 ###################################################
 na_drop_remelt <- rrapply(na_drop_unmelt, how = "melt")
 identical(na_drop_melt, na_drop_remelt)
 
 
 ###################################################
-### code chunk number 34: rrapply.Rnw:515-538
+### code chunk number 35: rrapply.Rnw:524-546
 ###################################################
 ## create a list of data.frames
 oceania_df <- list(
@@ -433,33 +445,32 @@ tryCatch({
   rrapply(
     oceania_df,
     f = function(x) subset(x, !is.na(value)), ## filter NA-rows of data.frame
-    how = "replace",
-    dfaslist = TRUE
+    how = "replace"
   )
 }, error = function(error) error$message)
 ## this does work
 rrapply(
   oceania_df,
+  classes = "data.frame",
   f = function(x) subset(x, !is.na(value)),
-  how = "replace",
-  dfaslist = FALSE
+  how = "replace"
 )
 
 
 ###################################################
-### code chunk number 35: rrapply.Rnw:543-550 (eval = FALSE)
+### code chunk number 36: rrapply.Rnw:551-558 (eval = FALSE)
 ###################################################
 ## rrapply(
 ##   oceania_df,
-##   condition = function(x) class(x) == "data.frame",
+##   classes = "list",
+##   condition = is.data.frame,
 ##   f = function(x) subset(x, !is.na(value)),
-##   how = "replace",
-##   feverywhere = "break"
+##   how = "replace"
 ## )
 
 
 ###################################################
-### code chunk number 36: rrapply.Rnw:562-576
+### code chunk number 37: rrapply.Rnw:566-580
 ###################################################
 ## how = "list" now preserves all list attributes
 na_drop_oceania_list_attr2 <- rrapply(
@@ -478,14 +489,14 @@ str(na_drop_oceania_attr, max.level = 2)
 
 
 ###################################################
-### code chunk number 37: rrapply.Rnw:584-586
+### code chunk number 38: rrapply.Rnw:587-589
 ###################################################
 iris_standard <- rapply(iris, f = scale, classes = "numeric", how = "replace")
 head(iris_standard)
 
 
 ###################################################
-### code chunk number 38: rrapply.Rnw:589-595
+### code chunk number 39: rrapply.Rnw:592-598
 ###################################################
 iris_standard_sepal <- rrapply(
   iris,                    
@@ -496,7 +507,7 @@ head(iris_standard_sepal)
 
 
 ###################################################
-### code chunk number 39: rrapply.Rnw:600-607
+### code chunk number 40: rrapply.Rnw:603-610
 ###################################################
 iris_standard_transmute <- rrapply(
   iris, 
@@ -508,7 +519,7 @@ head(iris_standard_transmute)
 
 
 ###################################################
-### code chunk number 40: rrapply.Rnw:612-620
+### code chunk number 41: rrapply.Rnw:615-623
 ###################################################
 ## summarize columns with how = "flatten"
 iris_standard_summarize <- rrapply(
@@ -521,7 +532,7 @@ iris_standard_summarize
 
 
 ###################################################
-### code chunk number 41: rrapply.Rnw:627-640
+### code chunk number 42: rrapply.Rnw:630-643
 ###################################################
 ## recurse through call as nested list
 ast <- function(expr) {
@@ -539,7 +550,7 @@ str(ast(quote(y <- x <- 1 + TRUE)))
 
 
 ###################################################
-### code chunk number 42: rrapply.Rnw:643-652
+### code chunk number 43: rrapply.Rnw:646-655
 ###################################################
 ## rapply on an expression vector (ok for R >= 3.6)
 tryCatch({
@@ -553,7 +564,7 @@ tryCatch({
 
 
 ###################################################
-### code chunk number 43: rrapply.Rnw:660-671
+### code chunk number 44: rrapply.Rnw:663-674
 ###################################################
 call_old <- quote(y <- x <- 1 + TRUE)
 str(call_old)
@@ -569,7 +580,7 @@ str(call_new)
 
 
 ###################################################
-### code chunk number 44: rrapply.Rnw:674-681
+### code chunk number 45: rrapply.Rnw:677-684
 ###################################################
 ## update and decompose call object
 call_ast <- rrapply(
@@ -581,7 +592,7 @@ str(call_ast)
 
 
 ###################################################
-### code chunk number 45: rrapply.Rnw:687-691
+### code chunk number 46: rrapply.Rnw:690-694
 ###################################################
 ## example expression
 expr <- expression(y <- x <- 1, f(g(2 * pi)))
@@ -590,7 +601,7 @@ is_new_name <- function(x) !exists(as.character(x), envir = baseenv())
 
 
 ###################################################
-### code chunk number 46: rrapply.Rnw:693-720
+### code chunk number 47: rrapply.Rnw:696-723
 ###################################################
 ## prune and decompose expression
 expr_prune <- rrapply(
@@ -622,7 +633,19 @@ expr_melt
 
 
 ###################################################
-### code chunk number 47: rrapply.Rnw:726-727
+### code chunk number 48: rrapply.Rnw:730-737
+###################################################
+## extract all terminal call nodes of AST
+rrapply(
+  expr, 
+  classes = "language", 
+  condition = function(x) !any(sapply(x, is.call)),
+  how = "flatten"
+)
+
+
+###################################################
+### code chunk number 49: rrapply.Rnw:743-744
 ###################################################
 options(op)
 
