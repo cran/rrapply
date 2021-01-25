@@ -103,7 +103,7 @@ na_drop_oceania_flat <- rrapply(
   classes = "numeric", 
   how = "flatten"
 )
-str(na_drop_oceania_flat, list.len = 10, give.attr = FALSE)
+head(na_drop_oceania_flat, n = 10)
 
 
 ###################################################
@@ -139,7 +139,24 @@ head(na_drop_melt2)
 
 
 ###################################################
-### code chunk number 13: rrapply.Rnw:213-220
+### code chunk number 13: rrapply.Rnw:208-220
+###################################################
+## Nested list of Pokemon properties in Pokemon GO
+data("pokedex")
+
+str(pokedex, list.len = 3)
+
+## Unnest list as a wide data.frame
+pokedex_wide <- rrapply(
+  pokedex,
+  how = "bind"
+)
+
+head(pokedex_wide[, c(1:3, 5:7)])
+
+
+###################################################
+### code chunk number 14: rrapply.Rnw:231-238
 ###################################################
 na_drop_oceania_list2 <- rrapply(
   renewable_oceania, 
@@ -151,7 +168,7 @@ str(na_drop_oceania_list2, list.len = 3, give.attr = FALSE)
 
 
 ###################################################
-### code chunk number 14: rrapply.Rnw:223-229
+### code chunk number 15: rrapply.Rnw:241-247
 ###################################################
 na_drop_oceania_list3 <- rrapply(
   renewable_oceania, 
@@ -162,7 +179,7 @@ str(na_drop_oceania_list3, list.len = 3, give.attr = FALSE)
 
 
 ###################################################
-### code chunk number 15: rrapply.Rnw:234-248
+### code chunk number 16: rrapply.Rnw:252-266
 ###################################################
 renewable_energy_above_85 <- rrapply(
   renewable_energy_by_country, 
@@ -181,7 +198,7 @@ str(renewable_energy_equal_0, give.attr = FALSE)
 
 
 ###################################################
-### code chunk number 16: rrapply.Rnw:255-262
+### code chunk number 17: rrapply.Rnw:273-280
 ###################################################
 na_zero_oceania_list2 <- rrapply(
   renewable_oceania, 
@@ -193,7 +210,7 @@ str(na_zero_oceania_list2, list.len = 3, give.attr = FALSE)
 
 
 ###################################################
-### code chunk number 17: rrapply.Rnw:266-273
+### code chunk number 18: rrapply.Rnw:284-291
 ###################################################
 na_zero_oceania_replace2 <- rrapply(
   renewable_oceania, 
@@ -205,7 +222,7 @@ str(na_zero_oceania_replace2, list.len = 3, give.attr = FALSE)
 
 
 ###################################################
-### code chunk number 18: rrapply.Rnw:280-299
+### code chunk number 19: rrapply.Rnw:298-317
 ###################################################
 ## this is not ok!
 tryCatch({
@@ -229,18 +246,18 @@ str(na_zero_oceania_replace3, list.len = 3, give.attr = FALSE)
 
 
 ###################################################
-### code chunk number 19: rrapply.Rnw:305-311
+### code chunk number 20: rrapply.Rnw:323-329
 ###################################################
 renewable_oceania_flat <- rrapply(
   renewable_oceania, 
   condition = Negate(is.na), 
   how = "flatten"
 )
-str(renewable_oceania_flat, list.len = 10, give.attr = FALSE)
+head(renewable_oceania_flat)
 
 
 ###################################################
-### code chunk number 20: rrapply.Rnw:314-321
+### code chunk number 21: rrapply.Rnw:332-339
 ###################################################
 renewable_oceania_flat_text <- mapply(
   FUN = function(name, value) sprintf("Renewable energy in %s: %.2f%%", name, value),
@@ -248,11 +265,11 @@ renewable_oceania_flat_text <- mapply(
   value = renewable_oceania_flat,
   SIMPLIFY = FALSE
 )
-str(renewable_oceania_flat_text, list.len = 10)
+str(renewable_oceania_flat_text, list.len = 6)
 
 
 ###################################################
-### code chunk number 21: rrapply.Rnw:335-342
+### code chunk number 22: rrapply.Rnw:353-360
 ###################################################
 renewable_oceania_flat_text <- rrapply(
   renewable_oceania,
@@ -260,11 +277,11 @@ renewable_oceania_flat_text <- rrapply(
   condition = Negate(is.na),
   how = "flatten"
 )
-str(renewable_oceania_flat_text, list.len = 10)
+head(renewable_oceania_flat_text, n = 6)
 
 
 ###################################################
-### code chunk number 22: rrapply.Rnw:348-354
+### code chunk number 23: rrapply.Rnw:366-372
 ###################################################
 renewable_benelux <- rrapply(
   renewable_energy_by_country, 
@@ -275,7 +292,7 @@ str(renewable_benelux, give.attr = FALSE)
 
 
 ###################################################
-### code chunk number 23: rrapply.Rnw:358-364
+### code chunk number 24: rrapply.Rnw:376-382
 ###################################################
 renewable_europe_above_50 <- rrapply(
   renewable_energy_by_country,
@@ -286,7 +303,7 @@ str(renewable_europe_above_50, give.attr = FALSE)
 
 
 ###################################################
-### code chunk number 24: rrapply.Rnw:367-372
+### code chunk number 25: rrapply.Rnw:385-390
 ###################################################
 renewable_europe_above_50 <- rrapply(
   renewable_energy_by_country,
@@ -296,7 +313,7 @@ renewable_europe_above_50 <- rrapply(
 
 
 ###################################################
-### code chunk number 25: rrapply.Rnw:376-385
+### code chunk number 26: rrapply.Rnw:394-403
 ###################################################
 (xpos_sweden <- rrapply(
   renewable_energy_by_country,
@@ -310,7 +327,7 @@ renewable_energy_by_country[[xpos_sweden$Sweden]]
 
 
 ###################################################
-### code chunk number 26: rrapply.Rnw:389-403
+### code chunk number 27: rrapply.Rnw:407-421
 ###################################################
 ## maximum depth
 depth_all <- rrapply(
@@ -329,7 +346,7 @@ max(sublist_count)
 
 
 ###################################################
-### code chunk number 27: rrapply.Rnw:406-413
+### code chunk number 28: rrapply.Rnw:424-431
 ###################################################
 ## look up sibling countries of Sweden in list
 siblings_sweden <- rrapply(
@@ -337,11 +354,26 @@ siblings_sweden <- rrapply(
   condition = function(x, .xsiblings) "Sweden" %in% names(.xsiblings),
   how = "flatten"
 )
-str(siblings_sweden, give.attr = FALSE)
+head(siblings_sweden, n = 6)
 
 
 ###################################################
-### code chunk number 28: rrapply.Rnw:420-430
+### code chunk number 29: rrapply.Rnw:434-444
+###################################################
+## parse only Pokemon number, name and type columns 
+pokedex_small <- rrapply(
+  pokedex,
+  condition = function(x, .xpos, .xname) {
+    length(.xpos) < 4 & .xname %in% c("num", "name", "type")
+    },
+  how = "bind"
+)
+
+head(pokedex_small)
+
+
+###################################################
+### code chunk number 30: rrapply.Rnw:451-461
 ###################################################
 rrapply(
   renewable_energy_by_country,  
@@ -356,7 +388,7 @@ rrapply(
 
 
 ###################################################
-### code chunk number 29: rrapply.Rnw:436-446
+### code chunk number 31: rrapply.Rnw:467-477
 ###################################################
 rrapply(
   renewable_energy_by_country,
@@ -371,7 +403,7 @@ rrapply(
 
 
 ###################################################
-### code chunk number 30: rrapply.Rnw:449-458
+### code chunk number 32: rrapply.Rnw:480-489
 ###################################################
 renewable_continent_summary <- rrapply(
   renewable_energy_by_country,  
@@ -385,7 +417,7 @@ str(renewable_continent_summary, give.attr = FALSE)
 
 
 ###################################################
-### code chunk number 31: rrapply.Rnw:462-469
+### code chunk number 33: rrapply.Rnw:493-500
 ###################################################
 ## Filter country or region by M49-code
 rrapply(
@@ -397,7 +429,22 @@ rrapply(
 
 
 ###################################################
-### code chunk number 32: rrapply.Rnw:476-487
+### code chunk number 34: rrapply.Rnw:503-513
+###################################################
+## Simplify Pokemon evolution sublists to character vectors 
+pokedex_wide2 <- rrapply(
+  pokedex,
+  classes = c("character", "list"),
+  condition = function(x, .xname) .xname %in% c("name", "next_evolution", "prev_evolution"), 
+  f = function(x) if(is.list(x)) sapply(x, `[[`, "name") else x,
+  how = "bind"
+)
+    
+head(pokedex_wide2, n = 9)
+
+
+###################################################
+### code chunk number 35: rrapply.Rnw:520-531
 ###################################################
 renewable_M49 <- rrapply(
   list(renewable_energy_by_country), 
@@ -413,7 +460,7 @@ str(renewable_M49[[1]], max.level = 3, list.len = 3, give.attr = FALSE)
 
 
 ###################################################
-### code chunk number 33: rrapply.Rnw:499-505
+### code chunk number 36: rrapply.Rnw:543-549
 ###################################################
 ## melted data.frame
 head(na_drop_melt)
@@ -424,14 +471,14 @@ str(na_drop_unmelt, list.len = 3, give.attr = FALSE)
 
 
 ###################################################
-### code chunk number 34: rrapply.Rnw:515-517
+### code chunk number 37: rrapply.Rnw:559-561
 ###################################################
 na_drop_remelt <- rrapply(na_drop_unmelt, how = "melt")
 identical(na_drop_melt, na_drop_remelt)
 
 
 ###################################################
-### code chunk number 35: rrapply.Rnw:524-546
+### code chunk number 38: rrapply.Rnw:568-590
 ###################################################
 ## create a list of data.frames
 oceania_df <- list(
@@ -458,7 +505,7 @@ rrapply(
 
 
 ###################################################
-### code chunk number 36: rrapply.Rnw:551-558 (eval = FALSE)
+### code chunk number 39: rrapply.Rnw:595-602 (eval = FALSE)
 ###################################################
 ## rrapply(
 ##   oceania_df,
@@ -470,7 +517,7 @@ rrapply(
 
 
 ###################################################
-### code chunk number 37: rrapply.Rnw:566-580
+### code chunk number 40: rrapply.Rnw:610-624
 ###################################################
 ## how = "list" now preserves all list attributes
 na_drop_oceania_list_attr2 <- rrapply(
@@ -489,14 +536,14 @@ str(na_drop_oceania_attr, max.level = 2)
 
 
 ###################################################
-### code chunk number 38: rrapply.Rnw:587-589
+### code chunk number 41: rrapply.Rnw:631-633
 ###################################################
 iris_standard <- rapply(iris, f = scale, classes = "numeric", how = "replace")
 head(iris_standard)
 
 
 ###################################################
-### code chunk number 39: rrapply.Rnw:592-598
+### code chunk number 42: rrapply.Rnw:636-642
 ###################################################
 iris_standard_sepal <- rrapply(
   iris,                    
@@ -507,7 +554,7 @@ head(iris_standard_sepal)
 
 
 ###################################################
-### code chunk number 40: rrapply.Rnw:603-610
+### code chunk number 43: rrapply.Rnw:647-654
 ###################################################
 iris_standard_transmute <- rrapply(
   iris, 
@@ -519,7 +566,7 @@ head(iris_standard_transmute)
 
 
 ###################################################
-### code chunk number 41: rrapply.Rnw:615-623
+### code chunk number 44: rrapply.Rnw:659-667
 ###################################################
 ## summarize columns with how = "flatten"
 iris_standard_summarize <- rrapply(
@@ -532,7 +579,7 @@ iris_standard_summarize
 
 
 ###################################################
-### code chunk number 42: rrapply.Rnw:630-643
+### code chunk number 45: rrapply.Rnw:674-687
 ###################################################
 ## recurse through call as nested list
 ast <- function(expr) {
@@ -550,7 +597,7 @@ str(ast(quote(y <- x <- 1 + TRUE)))
 
 
 ###################################################
-### code chunk number 43: rrapply.Rnw:646-655
+### code chunk number 46: rrapply.Rnw:690-699
 ###################################################
 ## rapply on an expression vector (ok for R >= 3.6)
 tryCatch({
@@ -564,7 +611,7 @@ tryCatch({
 
 
 ###################################################
-### code chunk number 44: rrapply.Rnw:663-674
+### code chunk number 47: rrapply.Rnw:707-718
 ###################################################
 call_old <- quote(y <- x <- 1 + TRUE)
 str(call_old)
@@ -580,7 +627,7 @@ str(call_new)
 
 
 ###################################################
-### code chunk number 45: rrapply.Rnw:677-684
+### code chunk number 48: rrapply.Rnw:721-728
 ###################################################
 ## update and decompose call object
 call_ast <- rrapply(
@@ -592,7 +639,7 @@ str(call_ast)
 
 
 ###################################################
-### code chunk number 46: rrapply.Rnw:690-694
+### code chunk number 49: rrapply.Rnw:734-738
 ###################################################
 ## example expression
 expr <- expression(y <- x <- 1, f(g(2 * pi)))
@@ -601,7 +648,7 @@ is_new_name <- function(x) !exists(as.character(x), envir = baseenv())
 
 
 ###################################################
-### code chunk number 47: rrapply.Rnw:696-723
+### code chunk number 50: rrapply.Rnw:740-767
 ###################################################
 ## prune and decompose expression
 expr_prune <- rrapply(
@@ -633,7 +680,7 @@ expr_melt
 
 
 ###################################################
-### code chunk number 48: rrapply.Rnw:730-737
+### code chunk number 51: rrapply.Rnw:774-781
 ###################################################
 ## extract all terminal call nodes of AST
 rrapply(
@@ -645,7 +692,7 @@ rrapply(
 
 
 ###################################################
-### code chunk number 49: rrapply.Rnw:743-744
+### code chunk number 52: rrapply.Rnw:787-788
 ###################################################
 options(op)
 
