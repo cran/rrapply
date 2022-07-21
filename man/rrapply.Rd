@@ -11,7 +11,8 @@ rrapply(
   classes = "ANY",
   deflt = NULL,
   how = c("replace", "list", "unlist", "prune", "flatten", "melt", "bind", "recurse",
-    "unmelt"),
+    "unmelt", "names"),
+  options,
   ...
 )
 }
@@ -29,17 +30,22 @@ to match the class of non-terminal nodes as well.}
 
 \item{deflt}{the default result (only used if \code{how = "list"} or \code{how = "unlist"}).}
 
-\item{how}{character string partially matching the nine possibilities given: see \sQuote{Details}.}
+\item{how}{character string partially matching the ten possibilities given: see \sQuote{Details}.}
+
+\item{options}{a named \code{\link{list}} with additional options \code{namesep}, \code{simplify}, \code{namecols} and/or \code{coldepth} 
+that only apply to certain choices of \code{how}: see \sQuote{Details}.}
 
 \item{...}{additional arguments passed to the call to \code{f} and \code{condition}.}
 }
 \value{
-If \code{how = "unlist"}, a vector as in \code{\link{rapply}}. If \code{how = "list"}, \code{how = "replace"} or \code{how = "recurse"}, 
+If \code{how = "unlist"}, a vector as in \code{\link{rapply}}. If \code{how = "list"}, \code{how = "replace"}, \code{how = "recurse"} or \code{how = "names"}, 
 \dQuote{list-like} of similar structure as \code{object} as in \code{\link{rapply}}. If \code{how = "prune"}, a pruned \dQuote{list-like} object 
 of similar structure as \code{object} with pruned list elements based on \code{classes} and \code{condition}. If \code{how = "flatten"}, a flattened
-pruned vector or list with pruned elements based on \code{classes} and \code{condition}. The result of \code{how = "flatten"} is coerced to vector 
-similar to \code{how = "unlist"}. If \code{how = "melt"}, a melted data.frame containing the node paths and values of the pruned list elements based
-on \code{classes} and \code{condition}. If \code{how = "unmelt"}, a nested list with list names and values defined in the data.frame \code{object}.
+pruned vector or list with pruned elements based on \code{classes} and \code{condition}. If \code{how = "melt"}, a melted data.frame containing the node paths 
+and values of the pruned list elements based on \code{classes} and \code{condition}. If \code{how = "bind"}, a wide data.frame with repeated list elements
+expanded as single data.frame rows and aligned by identical list names using the same coercion rules as \code{how = "unlist"}. The repeated list elements 
+are subject to pruning based on \code{classes} and \code{condition}. If \code{how = "unmelt"}, a nested list with list names and values defined 
+in the data.frame \code{object}.
 }
 \description{
 \code{rrapply} is a reimplemented and extended version of \code{\link{rapply}} to recursively apply a function \code{f} to 
@@ -55,22 +61,29 @@ and a final list- or vector-column containing the values of the nested list elem
 \section{How to structure result}{
 
 In addition to \code{\link{rapply}}'s modes to set \code{how} equal to \code{"replace"}, \code{"list"} or \code{"unlist"}, 
-five choices \code{"prune"}, \code{"flatten"}, \code{"melt"}, \code{"bind"}, \code{"unmelt"} and \code{"recurse"} are available. 
-\code{how = "prune"} filters all list elements not subject to application of \code{f} from the list \code{object}. The original 
-list structure is retained, similar to the non-pruned options \code{how = "replace"} or \code{how = "list"}. \code{how = "flatten"} 
-is an efficient way to return a flattened unnested version of the pruned list. \code{how = "flatten"} uses similar coercion rules 
-as \code{how = "unlist"}. \code{how = "melt"} returns a melted data.frame of the pruned list, each row contains the path of a single 
+seven choices \code{"prune"}, \code{"flatten"}, \code{"melt"}, \code{"bind"}, \code{"unmelt"}, \code{"recurse"}  and \code{"names"} are available:
+\itemize{
+\item \code{how = "prune"} filters all list elements not subject to application of \code{f} from the list \code{object}. The original 
+list structure is retained, similar to the non-pruned options \code{how = "replace"} or \code{how = "list"}.
+\item \code{how = "flatten"} is an efficient way to return a flattened unnested version of the pruned list. By default \code{how = "flatten"} 
+uses similar coercion rules as \code{how = "unlist"}, this can be disabled with \code{simplify = FALSE} in the \code{options} argument.
+\item \code{how = "melt"} returns a melted data.frame of the pruned list, each row contains the path of a single 
 terminal node in the pruned list at depth layers \code{L1}, \code{L2}, and so on. The column \code{"value"} contains the 
-possible coerced values at the terminal nodes and is equivalent to the result of \code{how = "flatten"}. If no list names are present, 
+possibly coerced values at the terminal nodes and is equivalent to the result of \code{how = "flatten"}. If no list names are present, 
 the node names in the data.frame default to the indices of the list elements \code{"1"}, \code{"2"}, etc.
-\code{how = "bind"} is used to unnest a nested list containing repeated sublists into a wide data.frame. Each repeated sublist is expanded 
-as a single row in the data.frame and identical names between sublists are aligned as individual columns. Repeated sublists are recognized
-as several sublists on the same nested level that are either unnamed or have the same name for each sublist. \code{how = "unmelt"} is a 
-special case that reconstructs a nested list from a melted data.frame. For this reason, \code{how = "unmelt"} 
+\item \code{how = "bind"} is used to unnest a nested list containing repeated sublists into a wide data.frame. Each repeated sublist is expanded 
+as a single row in the data.frame and identical sublist component names are aligned as individual columns. By default, the list layer 
+containing repeated sublists is identified based on the minimal depth detected across leaf nodes, this can be set manually with \code{coldepth} 
+in the \code{options} argument.
+\item \code{how = "unmelt"} is a special case that reconstructs a nested list from a melted data.frame. For this reason, \code{how = "unmelt"} 
 only applies to data.frames in the same format as returned by \code{how = "melt"}. Internally, \code{how = "unmelt"} first reconstructs 
-a nested list from the melted data.frame and second uses the same framework as \code{how = "replace"}. \code{how = "recurse"} is a specialized
-option that is only useful in combination with e.g. \code{classes = "list"} to recurse further into updated \dQuote{list-like} elements. 
-This is explained in more detail below.
+a nested list from the melted data.frame and second uses the same functional framework as \code{how = "replace"}.
+\item \code{how = "recurse"} is a specialized option that is only useful in combination with e.g. \code{classes = "list"} to recurse further 
+into updated \dQuote{list-like} elements. This is explained in more detail below.
+\item \code{how = "names"} modifies the \emph{names} of the nested list elements instead of the list content. \code{how = "names"} internally works  
+similar to \code{how = "list"}, except that the value of \code{f} is used to replace the name of the list element under evaluation 
+instead of its content. 
+}
 }
 
 \section{Condition function}{
@@ -88,7 +101,7 @@ not evaluate to \code{TRUE}.
 \section{Correct use of \code{...}}{
 
 The principal argument of the \code{f} and \code{condition} functions evaluates to the content of the list element. Any further arguments to 
-\code{f} and \code{condition} (besides the special arguments \code{.xname} and \code{.xpos} discussed below) supplied via the dots \code{...} 
+\code{f} and \code{condition} (besides the special arguments \code{.xname}, \code{.xpos}, etc. discussed below) supplied via the dots \code{...} 
 argument need to be defined as function arguments in \emph{both} the \code{f} and \code{condition} function (if existing), even if they are not
  used in the function itself. See also the \sQuote{Examples} section.
 }
@@ -101,7 +114,7 @@ to the position of the element in the nested list structured as an integer vecto
 location of \code{c(1, 2)} corresponds to the list element \code{x[[c(1, 2)]]}. The \code{.xparents} argument evaluates to a vector of all parent 
 node names in the path to the list element. The \code{.xsiblings} argument evaluates to the complete (sub)list that includes the list element as a direct child.
 The names \code{.xname}, \code{.xpos}, \code{.xparents} or \code{.xsiblings} need to be explicitly included as function arguments in \code{f} and 
-\code{condition} (in addition to the principal argument). See the package vignette for example uses of these special variables.
+\code{condition} (in addition to the principal argument). See also the \sQuote{Examples} section.
 }
 
 \section{Avoid recursing into list nodes}{
@@ -118,8 +131,8 @@ and so on. Note that this behavior can only be triggered using the \code{classes
 
 If \code{classes = "list"} and \code{how = "recurse"}, \code{rrapply} applies the \code{f} function to any list element of \code{object} that satisfies 
 \code{condition} similar to the previous section using \code{how = "replace"}, but recurses further into the \emph{updated} list-like element 
-after application of the \code{f} function. The primary use of \code{how = "recurse"} in combination with \code{classes = "list"} is to 
-recursively update for instance the names of all nodes in a nested list. Additional examples are found in the package vignette.
+after application of the \code{f} function. A primary use of \code{how = "recurse"} in combination with \code{classes = "list"} is to 
+recursively update for instance the class or other attributes of all nodes in a nested list.
 }
 
 \section{Avoid recursing into data.frames}{
@@ -134,8 +147,8 @@ the data.frame and not its columns. Note that this behavior can only be triggere
 
 In \code{\link{rapply}} intermediate list attributes (not located at terminal nodes) are kept when \code{how = "replace"}, but are dropped when 
 \code{how = "list"}. To avoid unexpected behavior, \code{rrapply} always preserves intermediate list attributes when using \code{how = "replace"}, 
-\code{how = "list"} or \code{how = "prune"}. If \code{how = "flatten"} or \code{how = "unlist"} intermediate list attributes cannot be preserved as 
-the result is no longer a nested list.
+\code{how = "list"}, \code{how = "prune"} or \code{how = "names"}. If \code{how = "unlist"}, \code{how = "flatten"}, \code{how = "melt"} or \code{how = "bind"} 
+intermediate list attributes cannot be preserved as the result is no longer a nested list.
 }
 
 \section{Expressions}{
@@ -147,21 +160,40 @@ structured as a nested list. \code{how = "prune"}, \code{how = "flatten"} and \c
 a flattened list and a melted data.frame respectively. This is identical to application of \code{rrapply} to the abstract syntax tree formatted as a nested list.
 }
 
+\section{Additional options}{
+
+The \code{options} argument accepts a named list to configure several default options that only apply to certain choices of \code{how}. The \code{options} 
+list can contain (any of) the named components \code{namesep}, \code{simplify}, \code{namecols} and/or \code{coldepth}:
+\itemize{
+\item \code{namesep}, a character separator used to combine parent and child list names in \code{how = "flatten"} and \code{how = "bind"}. If \code{namesep = NA} (default), 
+no parent names are included in \code{how = "flatten"} and the default separator \code{"."} is used in \code{how = "bind"}. Note that \code{namesep} cannot be used with 
+\code{how = "unlist"} for which the name separator always defaults to \code{"."}. 
+\item \code{simplify}, a logical value indicating whether the flattened unnested list in \code{how = "flatten"} and \code{how = "melt"} is simplified 
+according to standard coercion rules similar to \code{how = "unlist"}. The default is \code{simplify = TRUE}. If \code{simplify = FALSE}, 
+\code{object} is flattened to a single-layer list and returned as is.
+\item \code{namecols}, a logical value that only applies to \code{how = "bind"} indicating whether the parent node names associated to the each expanded sublist 
+should be included as columns \code{L1}, \code{L2}, etc. in the wide data.frame returned by \code{how = "bind"}. 
+\item \code{coldepth}, an integer value indicating the depth (starting from depth 1) at which list elements should be mapped to individual columns 
+in the wide data.frame returned by \code{how = "bind"}. If \code{coldepth = 0} (default), this depth layer is identified automatically based on the 
+minimal depth detected across all leaf nodes. This option only applies to \code{how = "bind"}.
+}
+}
+
 \examples{
 # Example data
 
-## Nested list of renewable energy (\%) of total energy consumption per country in 2016
+## Renewable energy shares per country (\% of total consumption) in 2016
 data("renewable_energy_by_country")
 
-## Subset values for countries and areas in Oceania
+## Renewable energy shares in Oceania
 renewable_oceania <- renewable_energy_by_country[["World"]]["Oceania"]
 
-## Nested list of Pokemon properties in Pokemon GO
+## Pokemon properties in Pokemon GO
 data("pokedex")
 
 # List pruning and unnesting
 
-## Drop all logical NA's while preserving list structure 
+## Drop logical NA's while preserving list structure 
 na_drop_oceania <- rrapply(
   renewable_oceania,
   f = function(x) x,
@@ -170,49 +202,59 @@ na_drop_oceania <- rrapply(
 )
 str(na_drop_oceania, list.len = 3, give.attr = FALSE)
 
-## Drop all logical NA's and return unnested list
+## Drop logical NA's and return unnested list
 na_drop_oceania2 <- rrapply(
   renewable_oceania,
-  f = function(x) x,
   classes = "numeric",
   how = "flatten"
 )
-
 head(na_drop_oceania2, n = 10)
 
-## Drop all logical NA's and return melted data.frame
+## Flatten to simple list with full names
 na_drop_oceania3 <- rrapply(
   renewable_oceania,
-  f = identity,
+  classes = "numeric",
+  how = "flatten",
+  options = list(namesep = ".", simplify = FALSE)
+) 
+str(na_drop_oceania3, list.len = 10, give.attr = FALSE)
+
+## Drop logical NA's and return melted data.frame
+na_drop_oceania4 <- rrapply(
+  renewable_oceania,
   classes = "numeric",
   how = "melt"
 )
-
-head(na_drop_oceania3)
+head(na_drop_oceania4)
 
 ## Reconstruct nested list from melted data.frame
-na_drop_oceania4 <- rrapply(
-  na_drop_oceania3,
+na_drop_oceania5 <- rrapply(
+  na_drop_oceania4,
   how = "unmelt"
 )
+str(na_drop_oceania5, list.len = 3, give.attr = FALSE)
 
-str(na_drop_oceania4, list.len = 3, give.attr = FALSE)
-
-## Convert nested list to wide data.frame
+## Unnest list to wide data.frame
 pokedex_wide <- rrapply(pokedex, how = "bind")
-
 head(pokedex_wide)
+
+## Unnest to data.frame including parent columns
+pokemon_evolutions <- rrapply(
+  pokedex, 
+  how = "bind", 
+  options = list(namecols = TRUE, coldepth = 5)
+) 
+head(pokemon_evolutions, n = 10)
 
 # Condition function
 
 ## Drop all NA elements using condition function
-na_drop_oceania3 <- rrapply(
+na_drop_oceania6 <- rrapply(
   renewable_oceania,
   condition = Negate(is.na),
-  f = function(x) x,
   how = "prune"
 )
-str(na_drop_oceania3, list.len = 3, give.attr = FALSE)
+str(na_drop_oceania6, list.len = 3, give.attr = FALSE)
 
 ## Replace NA elements by a new value via the ... argument
 ## NB: the 'newvalue' argument should be present as function 
@@ -239,8 +281,8 @@ str(renewable_energy_above_85, give.attr = FALSE)
 ## Apply a function using the name of the node
 renewable_oceania_text <- rrapply(
   renewable_oceania,
-  f = function(x, .xname) sprintf("Renewable energy in \%s: \%.2f\%\%", .xname, x),
   condition = Negate(is.na),
+  f = function(x, .xname) sprintf("Renewable energy in \%s: \%.2f\%\%", .xname, x),
   how = "flatten"
 )
 head(renewable_oceania_text, n = 10)
@@ -278,7 +320,7 @@ str(renewable_europe_above_50, give.attr = FALSE)
 ))
 renewable_energy_by_country[[xpos_sweden$Sweden]]
 
-## Return siblings of Sweden in list
+## Return neighbors of Sweden in list
 siblings_sweden <- rrapply(
   renewable_energy_by_country,
   condition = function(x, .xsiblings) "Sweden" \%in\% names(.xsiblings),
@@ -286,13 +328,12 @@ siblings_sweden <- rrapply(
 )
 head(siblings_sweden, n = 10)
 
-## Return wide Pokedex data.frame without evolutions 
+## Unnest selected columns in Pokedex list 
 pokedex_small <- rrapply(
    pokedex,
-   condition = function(x, .xparents) !any(grepl("evolution", .xparents)),
+   condition = function(x, .xpos, .xname) length(.xpos) < 4 & .xname \%in\% c("num", "name", "type"),
    how = "bind"
 )  
-
 head(pokedex_small)
 
 # Modifying list elements
@@ -300,37 +341,49 @@ head(pokedex_small)
 ## Calculate mean value of Europe
 rrapply(
   renewable_energy_by_country,  
-  classes = "list",
   condition = function(x, .xname) .xname == "Europe",
   f = function(x) mean(unlist(x), na.rm = TRUE),
+  classes = "list",
   how = "flatten"
 )
 
 ## Calculate mean value for each continent
+## (Antarctica's value is missing)
 renewable_continent_summary <- rrapply(
   renewable_energy_by_country,  
-  classes = "list",
   condition = function(x, .xpos) length(.xpos) == 2,
-  f = function(x) mean(unlist(x), na.rm = TRUE)
+  f = function(x) mean(unlist(x), na.rm = TRUE),
+  classes = "list"
 )
-
-## Antarctica's value is missing
 str(renewable_continent_summary, give.attr = FALSE)
 
-# List node updating
-
-## replace country names by M-49 codes
-renewable_M49 <- rrapply(
-  list(renewable_energy_by_country), 
-  classes = "list",
-  f = function(x) {
-    names(x) <- vapply(x, attr, character(1L), which = "M49-code")
-    return(x)
-  },
-  how = "recurse"
+## Filter country or region by M49-code
+rrapply(
+  renewable_energy_by_country,
+  condition = function(x) attr(x, "M49-code") == "155",
+  f = function(x, .xname) .xname,
+  classes = c("list", "ANY"), 
+  how = "unlist"
 )
 
-str(renewable_M49[[1]], max.level = 3, list.len = 3, give.attr = FALSE)
+# Recursive list updating
+
+## Recursively remove list attributes
+renewable_no_attrs <- rrapply(
+  renewable_oceania,
+  f = function(x) c(x),
+  classes = c("list", "ANY"),
+  how = "recurse"
+) 
+str(renewable_no_attrs, list.len = 3, give.attr = TRUE)
+
+## recursively replace all names by M49-codes
+renewable_m49_names <- rrapply(
+  renewable_oceania,
+  f = function(x) attr(x, "M49-code"),
+  how = "names"
+) 
+str(renewable_m49_names, list.len = 3, give.attr = FALSE)
 
 # List attributes
 
@@ -355,9 +408,9 @@ str(na_drop_oceania_attr2, max.level = 2)
 ## Replace logicals by integers
 call_old <- quote(y <- x <- 1 + TRUE)
 call_new <- rrapply(call_old, 
-  classes = "logical", 
   f = as.numeric, 
-  how = "replace"
+  how = "replace",
+  classes = "logical"
 )
 str(call_new)
 
@@ -387,13 +440,12 @@ expr_flatten <- rrapply(expr,
 str(expr_flatten)
 
 ## Prune and melt expression
-expr_melt <- rrapply(expr, 
+rrapply(expr, 
   classes = "name", 
   condition = is_new_name, 
   f = as.character,
   how = "melt"
 )
-expr_melt
 
 ## Avoid recursing into call objects
 rrapply(
