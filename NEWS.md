@@ -1,3 +1,8 @@
+# rrapply 1.2.7
+
+* Removed internal calls to `COMPLEX0` and `STRING_PTR` fixing CRAN warning;  
+* Unnamed elements in partially named lists remain unnamed when using `how = "names"`
+
 # rrapply 1.2.6
 
 * Duplicate column names are allowed in `how = "bind"` and made unique with `make.unique()`;
